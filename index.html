@@ -352,6 +352,7 @@
       imageScale: 100,
       imageX: 0,
       imageY: 0,
+      coinFontSize: 48,
       showMemberPrice: true,
       showItemName: false
     };
@@ -499,6 +500,11 @@
             <input data-key="imageY" type="range" min="-160" max="160" value="${it.imageY}">
           </div>
 
+          <div class="field">
+            <label>S-Coin value font size: <span id="coinFontLabel${i}">${it.coinFontSize || 48}px</span></label>
+            <input data-key="coinFontSize" type="range" min="28" max="58" value="${it.coinFontSize || 48}">
+          </div>
+
           <details>
             <summary style="font-weight:900;cursor:pointer;">Advanced text for this card</summary>
             <div style="display:grid;gap:10px;margin-top:10px;">
@@ -530,8 +536,20 @@
         items[i][key] = input.checked;
       }else if(input.type === 'range'){
         items[i][key] = Number(input.value);
-        const label = $(`${key==='imageScale'?'scale':key==='imageX'?'x':'y'}Label${i}`);
-        if(label) label.textContent = key==='imageScale' ? input.value + '%' : input.value;
+
+        const labelMap = {
+          imageScale: `scaleLabel${i}`,
+          imageX: `xLabel${i}`,
+          imageY: `yLabel${i}`,
+          coinFontSize: `coinFontLabel${i}`
+        };
+
+        const label = $(labelMap[key]);
+        if(label){
+          if(key === 'imageScale') label.textContent = input.value + '%';
+          else if(key === 'coinFontSize') label.textContent = input.value + 'px';
+          else label.textContent = input.value;
+        }
       }else{
         items[i][key] = input.value;
       }
@@ -719,7 +737,13 @@
       svg.appendChild(coinImg);
 
       const coinLine = `${formatCoin(it.coin)} S-COIN`;
-      const coinFontSize = coinLine.length > 17 ? 26 : coinLine.length > 15 ? 28 : coinLine.length > 13 ? 30 : 34;
+
+      // User-adjustable S-Coin value font size.
+      // It defaults close to the original design, but auto-reduces slightly for very long values.
+      const userCoinFontSize = Number(it.coinFontSize || 48);
+      const longValueReduction = coinLine.length > 18 ? 8 : coinLine.length > 16 ? 5 : coinLine.length > 14 ? 2 : 0;
+      const coinFontSize = Math.max(28, userCoinFontSize - longValueReduction);
+
       addText(svg,coinLine,458,789,{size:coinFontSize,weight:900,fill:'#e60012',anchor:'middle'});
       addText(svg,'Untuk tebus item ini',458,830,{size:22,weight:700,fill:'#111827',anchor:'middle'});
 
