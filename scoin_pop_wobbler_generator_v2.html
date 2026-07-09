@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S-Coin POP / Wobbler Generator</title>
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --panel:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6b7280;
+      --red:#e60012;
+      --yellow:#ffd400;
+      --orange:#ff8a00;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border);
+      padding:14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    header h1{
+      font-size:20px;
+      margin:0;
+      letter-spacing:-.02em;
+    }
+    header .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    button, .file-label{
+      border:0;
+      background:#111827;
+      color:#fff;
+      padding:10px 13px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      line-height:1;
+      text-decoration:none;
+      user-select:none;
+    }
+    button.secondary{background:#374151}
+    button.red{background:#dc2626}
+    button.yellow{background:#f59e0b;color:#111827}
+    button.ghost{
+      background:#fff;
+      color:#111827;
+      border:1px solid var(--border);
+    }
+    button:hover,.file-label:hover{filter:brightness(.95)}
+    main{
+      display:grid;
+      grid-template-columns:420px minmax(0,1fr);
+      gap:18px;
+      padding:18px;
+      max-width:1500px;
+      margin:0 auto;
+    }
+    .editor,.preview-wrap{
+      min-width:0;
+    }
+    .card-panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .settings{
+      padding:16px;
+      display:grid;
+      gap:14px;
+    }
+    .section-title{
+      font-weight:900;
+      font-size:14px;
+      letter-spacing:.02em;
+      margin:6px 0 0;
+      color:#111827;
+      text-transform:uppercase;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin:0;
+    }
+    .field{
+      display:grid;
+      gap:6px;
+    }
+    label{
+      font-size:12px;
+      font-weight:800;
+      color:#374151;
+    }
+    input[type="text"],input[type="number"],select,textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+      font:inherit;
+      background:#fff;
+      outline:none;
+    }
+    input[type="range"]{width:100%}
+    textarea{min-height:62px;resize:vertical}
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .item-tabs{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      padding:12px;
+      border-bottom:1px solid var(--border);
+      background:#fbfbfc;
+      border-radius:var(--radius) var(--radius) 0 0;
+    }
+    .tab{
+      background:#fff;
+      color:#111827;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .tab.active{
+      background:var(--red);
+      color:#fff;
+      border-color:var(--red);
+    }
+    .item-form{display:none}
+    .item-form.active{display:grid;gap:14px}
+    .file-input{display:none}
+    .upload-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .mini{
+      font-size:12px;
+      padding:8px 10px;
+    }
+    .check-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:#374151;
+      font-weight:700;
+    }
+    .preview-wrap{
+      display:grid;
+      gap:14px;
+    }
+    .toolbar{
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .toolbar .left,.toolbar .right{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .preview-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(260px,1fr));
+      gap:16px;
+    }
+    .preview-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .preview-card .card-head{
+      padding:10px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+      border-bottom:1px solid var(--border);
+      background:#fbfbfc;
+      font-size:13px;
+      font-weight:900;
+    }
+    .preview-card .card-actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .svg-box{
+      padding:12px;
+      background:#f8fafc;
+    }
+    svg.pop{
+      width:100%;
+      height:auto;
+      display:block;
+      filter:drop-shadow(0 8px 18px rgba(0,0,0,.08));
+    }
+    .print-page{
+      display:none;
+    }
+    @media(max-width:1050px){
+      main{grid-template-columns:1fr}
+      header{position:relative}
+    }
+    @media(max-width:650px){
+      main{padding:10px}
+      .preview-grid{grid-template-columns:1fr}
+      .grid-2{grid-template-columns:1fr}
+      header{padding:12px}
+    }
+
+    @media print{
+      body{background:#fff}
+      header, .editor, .toolbar, .preview-card .card-head{display:none !important}
+      main{display:block;padding:0;max-width:none}
+      .preview-wrap,.card-panel{border:0;box-shadow:none}
+      .preview-grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:5mm;
+        padding:6mm;
+      }
+      .preview-card{
+        box-shadow:none;
+        border:0;
+        border-radius:0;
+        page-break-inside:avoid;
+      }
+      .svg-box{padding:0;background:#fff}
+      svg.pop{filter:none}
+      @page{
+        size:A4 portrait;
+        margin:6mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>S-Coin POP / Wobbler Generator</h1>
+      <p class="hint">Upload sampai 4 item redeem, key in S-Coin value, export PNG/SVG atau print terus.</p>
+    </div>
+    <div class="actions">
+      <button class="yellow" onclick="window.print()">Print A4</button>
+      <button class="secondary" onclick="exportAllSVG()">Export All SVG</button>
+      <button class="secondary" onclick="exportAllPNG()">Export All PNG</button>
+      <button class="ghost" onclick="saveToBrowser()">Save</button>
+      <button class="red" onclick="clearAll()">Reset</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="editor card-panel">
+      <div class="item-tabs" id="tabs"></div>
+      <div class="settings">
+        <p class="section-title">Global Text</p>
+        <div class="grid-2">
+          <div class="field">
+            <label>Headline</label>
+            <input id="globalHeadline" type="text" value="PERCUMA!" />
+          </div>
+          <div class="field">
+            <label>Subheadline</label>
+            <input id="globalSub" type="text" value="Tebus dengan S-Coin Cashback" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Small Note</label>
+            <input id="globalNote" type="text" value="Recommended redemption item" />
+          </div>
+          <div class="field">
+            <label>Disclaimer</label>
+            <input id="globalDisc" type="text" value="Tertakluk baki S-Coin, stok & item terpilih." />
+          </div>
+        </div>
+        <button class="ghost mini" onclick="applyGlobal()">Apply global text to all cards</button>
+
+        <p class="section-title">Item Editor</p>
+        <p class="hint">Tip: untuk S-Coin, boleh taip <b>15900</b>. Preview akan auto jadi <b>15,900 S-COIN</b>.</p>
+        <div id="forms"></div>
+      </div>
+    </section>
+
+    <section class="preview-wrap">
+      <div class="toolbar card-panel">
+        <div class="left">
+          <strong>Live Preview</strong>
+          <span class="hint">4 cards / A4 print-friendly</span>
+        </div>
+        <div class="right">
+          <button class="yellow" onclick="window.print()">Print</button>
+          <button class="ghost" onclick="loadFromBrowser()">Load Saved</button>
+        </div>
+      </div>
+      <div class="preview-grid" id="previewGrid"></div>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULTS = {
+      headline: 'PERCUMA!',
+      sub: 'Tebus dengan S-Coin Cashback',
+      note: 'Recommended redemption item',
+      disclaimer: 'Tertakluk baki S-Coin, stok & item terpilih.',
+      coin: '',
+      memberPrice: '',
+      itemName: '',
+      image: '',
+      imageScale: 100,
+      imageX: 0,
+      imageY: 0,
+      showMemberPrice: true,
+      showItemName: false
+    };
+
+    let items = Array.from({length:4}, () => ({...DEFAULTS}));
+    let activeIndex = 0;
+
+    const $ = (id) => document.getElementById(id);
+
+    function cleanNumber(v){
+      return String(v || '').replace(/[^\d]/g,'');
+    }
+    function formatCoin(v){
+      const n = cleanNumber(v);
+      if(!n) return '[XXXX]';
+      return Number(n).toLocaleString('en-US');
+    }
+    function formatRM(v){
+      const n = cleanNumber(v);
+      if(!n) return '';
+      return 'RM' + Number(n).toLocaleString('en-US');
+    }
+    function setText(el, text){
+      el.textContent = text || '';
+    }
+
+    function init(){
+      renderTabs();
+      renderForms();
+      renderPreviews();
+      bindGlobalInputs();
+      loadFromBrowser(false);
+    }
+
+    function bindGlobalInputs(){
+      ['globalHeadline','globalSub','globalNote','globalDisc'].forEach(id=>{
+        $(id).addEventListener('input',()=>{});
+      });
+    }
+
+    function renderTabs(){
+      const tabs = $('tabs');
+      tabs.innerHTML = '';
+      items.forEach((_,i)=>{
+        const b = document.createElement('button');
+        b.className = 'tab' + (i===activeIndex?' active':'');
+        b.textContent = `Item ${i+1}`;
+        b.onclick = () => {
+          activeIndex = i;
+          renderTabs();
+          renderForms();
+        };
+        tabs.appendChild(b);
+      });
+    }
+
+    function renderForms(){
+      const forms = $('forms');
+      forms.innerHTML = '';
+      items.forEach((it,i)=>{
+        const form = document.createElement('div');
+        form.className = 'item-form' + (i===activeIndex?' active':'');
+        form.innerHTML = `
+          <div class="field">
+            <label>Upload image item redeem</label>
+            <div class="upload-row">
+              <label class="file-label mini" for="file${i}">Choose Image</label>
+              <input class="file-input" id="file${i}" type="file" accept="image/*">
+              <button class="ghost mini" data-action="removeImage">Remove Image</button>
+              <span class="hint">${it.image ? 'Image loaded' : 'No image yet'}</span>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>S-Coin needed</label>
+              <input data-key="coin" type="text" placeholder="15900" value="${escapeAttr(it.coin)}">
+            </div>
+            <div class="field">
+              <label>Member price / item value</label>
+              <input data-key="memberPrice" type="text" placeholder="159" value="${escapeAttr(it.memberPrice)}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Item name, optional</label>
+            <input data-key="itemName" type="text" placeholder="Blender / Table Fan / Pressure Cooker" value="${escapeAttr(it.itemName)}">
+          </div>
+
+          <div class="grid-2">
+            <label class="check-row">
+              <input data-key="showMemberPrice" type="checkbox" ${it.showMemberPrice?'checked':''}>
+              Show member price
+            </label>
+            <label class="check-row">
+              <input data-key="showItemName" type="checkbox" ${it.showItemName?'checked':''}>
+              Show item name
+            </label>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>Image size: <span id="scaleLabel${i}">${it.imageScale}%</span></label>
+              <input data-key="imageScale" type="range" min="60" max="160" value="${it.imageScale}">
+            </div>
+            <div class="field">
+              <label>Move left/right: <span id="xLabel${i}">${it.imageX}</span></label>
+              <input data-key="imageX" type="range" min="-160" max="160" value="${it.imageX}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Move up/down: <span id="yLabel${i}">${it.imageY}</span></label>
+            <input data-key="imageY" type="range" min="-160" max="160" value="${it.imageY}">
+          </div>
+
+          <details>
+            <summary style="font-weight:900;cursor:pointer;">Advanced text for this card</summary>
+            <div style="display:grid;gap:10px;margin-top:10px;">
+              <div class="field"><label>Headline</label><input data-key="headline" type="text" value="${escapeAttr(it.headline)}"></div>
+              <div class="field"><label>Subheadline</label><input data-key="sub" type="text" value="${escapeAttr(it.sub)}"></div>
+              <div class="field"><label>Small note</label><input data-key="note" type="text" value="${escapeAttr(it.note)}"></div>
+              <div class="field"><label>Disclaimer</label><input data-key="disclaimer" type="text" value="${escapeAttr(it.disclaimer)}"></div>
+            </div>
+          </details>
+        `;
+        forms.appendChild(form);
+
+        form.querySelector(`#file${i}`).addEventListener('change', (e)=>handleFile(e,i));
+        form.querySelectorAll('[data-key]').forEach(input=>{
+          input.addEventListener('input',()=>handleInput(input,i));
+          input.addEventListener('change',()=>handleInput(input,i));
+        });
+        form.querySelector('[data-action="removeImage"]').onclick = () => {
+          items[i].image = '';
+          renderForms();
+          renderPreviews();
+        };
+      });
+    }
+
+    function handleInput(input,i){
+      const key = input.dataset.key;
+      if(input.type === 'checkbox'){
+        items[i][key] = input.checked;
+      }else if(input.type === 'range'){
+        items[i][key] = Number(input.value);
+        const label = $(`${key==='imageScale'?'scale':key==='imageX'?'x':'y'}Label${i}`);
+        if(label) label.textContent = key==='imageScale' ? input.value + '%' : input.value;
+      }else{
+        items[i][key] = input.value;
+      }
+      renderPreviews();
+    }
+
+    function handleFile(e,i){
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        items[i].image = reader.result;
+        renderForms();
+        renderPreviews();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyGlobal(){
+      const headline = $('globalHeadline').value;
+      const sub = $('globalSub').value;
+      const note = $('globalNote').value;
+      const disclaimer = $('globalDisc').value;
+      items = items.map(it => ({...it, headline, sub, note, disclaimer}));
+      renderForms();
+      renderPreviews();
+    }
+
+    function escapeAttr(str){
+      return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function renderPreviews(){
+      const grid = $('previewGrid');
+      grid.innerHTML = '';
+      items.forEach((it,i)=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'preview-card';
+        wrap.innerHTML = `
+          <div class="card-head">
+            <span>Item ${i+1}${it.itemName ? ' · ' + escapeHTML(it.itemName) : ''}</span>
+            <span class="card-actions">
+              <button class="ghost mini" onclick="downloadSVG(${i})">SVG</button>
+              <button class="ghost mini" onclick="downloadPNG(${i})">PNG</button>
+            </span>
+          </div>
+          <div class="svg-box"></div>
+        `;
+        wrap.querySelector('.svg-box').appendChild(makeSVG(it,i));
+        grid.appendChild(wrap);
+      });
+    }
+
+    function escapeHTML(str){
+      return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function makeSVG(it, index){
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(NS,'svg');
+      svg.setAttribute('class','pop');
+      svg.setAttribute('viewBox','0 0 800 1000');
+      svg.setAttribute('xmlns',NS);
+      svg.setAttribute('data-index',index);
+      svg.setAttribute('role','img');
+
+      const defs = el(NS,'defs');
+      defs.innerHTML = `
+        <linearGradient id="bg${index}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffe100"/>
+          <stop offset="54%" stop-color="#ffd400"/>
+          <stop offset="100%" stop-color="#ffbc00"/>
+        </linearGradient>
+        <linearGradient id="badge${index}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#fff6df"/>
+        </linearGradient>
+        <linearGradient id="coin${index}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fff27a"/>
+          <stop offset="45%" stop-color="#ffc400"/>
+          <stop offset="100%" stop-color="#f28a00"/>
+        </linearGradient>
+        <filter id="shadow${index}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000000" flood-opacity="0.18"/>
+        </filter>
+        <clipPath id="imgClip${index}">
+          <rect x="58" y="320" width="684" height="438" rx="32"/>
+        </clipPath>
+      `;
+      svg.appendChild(defs);
+
+      // Background card
+      add(svg, 'rect', {x:24,y:16,width:752,height:968,rx:34,fill:`url(#bg${index})`});
+      // subtle rays
+      for(let a=-20; a<=200; a+=18){
+        const p = el(NS,'path');
+        p.setAttribute('d', `M400 40 L${400+650*Math.cos(a*Math.PI/180)} ${40+650*Math.sin(a*Math.PI/180)} L${400+650*Math.cos((a+7)*Math.PI/180)} ${40+650*Math.sin((a+7)*Math.PI/180)} Z`);
+        p.setAttribute('fill','#fff');
+        p.setAttribute('opacity','0.10');
+        svg.appendChild(p);
+      }
+      // halftone dots bottom left/right
+      for(let side of [0,1]){
+        for(let r=0;r<9;r++){
+          for(let c=0;c<16;c++){
+            const cx = side? 590 + c*12 : 40 + c*12;
+            const cy = 820 + r*14;
+            add(svg,'circle',{cx,cy,r:2.2,fill:'#fff',opacity:0.24});
+          }
+        }
+      }
+
+      // Headline
+      addText(svg, it.headline || 'PERCUMA!', 400, 155, {
+        size:106, weight:900, fill:'#e60012', anchor:'middle',
+        stroke:'#ffffff', strokeWidth:14, paintOrder:'stroke fill',
+        transform:'rotate(-2 400 155)'
+      });
+      addText(svg, it.headline || 'PERCUMA!', 400, 155, {
+        size:106, weight:900, fill:'#e60012', anchor:'middle',
+        transform:'rotate(-2 400 155)'
+      });
+
+      // sub text
+      addText(svg, it.sub || 'Tebus dengan S-Coin Cashback', 400, 238, {
+        size:34, weight:900, fill:'#111827', anchor:'middle'
+      });
+      addText(svg, `✦ ${it.note || 'Recommended redemption item'} ✦`, 400, 276, {
+        size:23, weight:500, fill:'#8a3a00', anchor:'middle', style:'italic'
+      });
+
+      // sparkles
+      addText(svg,'✦',83,113,{size:34,fill:'#fff',anchor:'middle'});
+      addText(svg,'✦',710,140,{size:30,fill:'#fff',anchor:'middle'});
+      addText(svg,'◆',105,910,{size:18,fill:'#e60012',anchor:'middle',transform:'rotate(45 105 910)'});
+      addText(svg,'◆',698,910,{size:18,fill:'#e60012',anchor:'middle',transform:'rotate(45 698 910)'});
+
+      // main white panel
+      add(svg,'rect',{x:50,y:306,width:700,height:560,rx:36,fill:'#ffffff',stroke:'#ffffff',strokeWidth:9,filter:`url(#shadow${index})`});
+      add(svg,'rect',{x:58,y:314,width:684,height:544,rx:31,fill:'#fff',stroke:'#f2cf00',strokeWidth:5});
+
+      // image area
+      const imgArea = {x:72,y:325,w:656,h:390};
+      if(it.image){
+        const scale = (Number(it.imageScale)||100)/100;
+        const iw = imgArea.w * scale;
+        const ih = imgArea.h * scale;
+        const ix = imgArea.x + (imgArea.w - iw)/2 + (Number(it.imageX)||0);
+        const iy = imgArea.y + (imgArea.h - ih)/2 + (Number(it.imageY)||0);
+        const image = el(NS,'image');
+        image.setAttribute('href',it.image);
+        image.setAttribute('x',ix);
+        image.setAttribute('y',iy);
+        image.setAttribute('width',iw);
+        image.setAttribute('height',ih);
+        image.setAttribute('preserveAspectRatio','xMidYMid meet');
+        image.setAttribute('clip-path',`url(#imgClip${index})`);
+        svg.appendChild(image);
+      } else {
+        add(svg,'rect',{x:90,y:350,width:620,height:330,rx:24,fill:'#ffffff',opacity:0.0});
+        add(svg,'rect',{x:288,y:418,width:224,height:150,rx:16,fill:'none',stroke:'#bdbdbd',strokeWidth:10});
+        add(svg,'circle',{cx:348,cy:465,r:24,fill:'#cfcfcf'});
+        add(svg,'path',{d:'M310 535 L370 480 L420 527 L474 462 L492 535 Z',fill:'#c7c7c7'});
+        addText(svg,'LETAK GAMBAR',400,620,{size:42,weight:900,fill:'#8b8b8b',anchor:'middle'});
+        addText(svg,'ITEM DI SINI',400,676,{size:42,weight:900,fill:'#8b8b8b',anchor:'middle'});
+      }
+
+      // item name optional
+      if(it.showItemName && it.itemName){
+        add(svg,'rect',{x:210,y:694,width:380,height:48,rx:22,fill:'#fff7d6',stroke:'#f3b600',strokeWidth:3});
+        addText(svg,it.itemName,400,727,{size:24,weight:800,fill:'#111827',anchor:'middle'});
+      }
+
+      // S-Coin badge
+      add(svg,'rect',{x:132,y:746,width:536,height:110,rx:36,fill:`url(#badge${index})`,stroke:'#e60012',strokeWidth:5,filter:`url(#shadow${index})`});
+      add(svg,'circle',{cx:190,cy:801,r:38,fill:`url(#coin${index})`,stroke:'#ffffff',strokeWidth:5});
+      addText(svg,'S',190,814,{size:44,weight:900,fill:'#ffffff',anchor:'middle'});
+      addText(svg,`${formatCoin(it.coin)} S-COIN`,440,797,{size:52,weight:900,fill:'#e60012',anchor:'middle'});
+      addText(svg,'Untuk tebus item ini',440,840,{size:25,weight:700,fill:'#111827',anchor:'middle'});
+
+      if(it.showMemberPrice && cleanNumber(it.memberPrice)){
+        add(svg,'rect',{x:263,y:846,width:274,height:44,rx:22,fill:'#e60012'});
+        addText(svg,`Member Price ${formatRM(it.memberPrice)}`,400,877,{size:27,weight:900,fill:'#ffffff',anchor:'middle'});
+      }
+
+      // disclaimer
+      addText(svg, it.disclaimer || 'Tertakluk baki S-Coin, stok & item terpilih.', 400, 943, {
+        size:23, weight:500, fill:'#111827', anchor:'middle'
+      });
+
+      return svg;
+    }
+
+    function el(NS,name){
+      return document.createElementNS(NS,name);
+    }
+    function add(parent,name,attrs){
+      const node = document.createElementNS('http://www.w3.org/2000/svg',name);
+      for(const [k,v] of Object.entries(attrs)){
+        node.setAttribute(k, v);
+      }
+      parent.appendChild(node);
+      return node;
+    }
+    function addText(parent,text,x,y,opt={}){
+      const t = add(parent,'text',{
+        x,y,
+        'font-family':'Arial, Helvetica, sans-serif',
+        'font-size':opt.size || 24,
+        'font-weight':opt.weight || 700,
+        fill:opt.fill || '#000',
+        'text-anchor':opt.anchor || 'start'
+      });
+      if(opt.stroke){ t.setAttribute('stroke', opt.stroke); }
+      if(opt.strokeWidth){ t.setAttribute('stroke-width', opt.strokeWidth); }
+      if(opt.paintOrder){ t.setAttribute('paint-order', opt.paintOrder); }
+      if(opt.transform){ t.setAttribute('transform', opt.transform); }
+      if(opt.style){ t.setAttribute('style', opt.style); }
+      t.textContent = text;
+      return t;
+    }
+
+    function svgString(i){
+      const svg = document.querySelector(`svg.pop[data-index="${i}"]`);
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+      clone.setAttribute('width','1600');
+      clone.setAttribute('height','2000');
+      return new XMLSerializer().serializeToString(clone);
+    }
+
+    function downloadSVG(i){
+      const name = fileName(i,'svg');
+      downloadString(svgString(i), name, 'image/svg+xml;charset=utf-8');
+    }
+
+    async function downloadPNG(i){
+      const str = svgString(i);
+      const blob = new Blob([str], {type:'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1600;
+        canvas.height = 2000;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,1600,2000);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((pngBlob)=>{
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(pngBlob);
+          a.download = fileName(i,'png');
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+        },'image/png',1);
+      };
+      img.onerror = () => {
+        alert('PNG export failed. Try SVG export or print.');
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+
+    function fileName(i,ext){
+      const name = cleanFile(items[i].itemName || `scoin-pop-item-${i+1}`);
+      return `${name}.${ext}`;
+    }
+    function cleanFile(s){
+      return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'scoin-pop';
+    }
+    function downloadString(content, filename, type){
+      const blob = new Blob([content], {type});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    }
+    function exportAllSVG(){
+      for(let i=0;i<items.length;i++) downloadSVG(i);
+    }
+    function exportAllPNG(){
+      for(let i=0;i<items.length;i++) setTimeout(()=>downloadPNG(i), i*350);
+    }
+
+    function saveToBrowser(showAlert=true){
+      localStorage.setItem('scoin_pop_generator_v1', JSON.stringify(items));
+      if(showAlert) alert('Saved in this browser.');
+    }
+    function loadFromBrowser(showAlert=true){
+      const saved = localStorage.getItem('scoin_pop_generator_v1');
+      if(!saved) return;
+      try{
+        const parsed = JSON.parse(saved);
+        if(Array.isArray(parsed) && parsed.length===4){
+          items = parsed.map(x => ({...DEFAULTS, ...x}));
+          renderTabs();
+          renderForms();
+          renderPreviews();
+          if(showAlert) alert('Loaded saved design.');
+        }
+      }catch(e){}
+    }
+    function clearAll(){
+      if(!confirm('Reset semua item?')) return;
+      items = Array.from({length:4}, () => ({...DEFAULTS}));
+      localStorage.removeItem('scoin_pop_generator_v1');
+      renderTabs();
+      renderForms();
+      renderPreviews();
+    }
+
+    init();
+  </script>
+</body>
+</html>
